@@ -81,7 +81,7 @@ class GUI:
         self.update_counter_display(selected_counter.count)
 
     def update_counter_display(self, count):
-        self.counter_display.config(text=str(count))
+        self.counter_display.config(text=count)
 
     def run(self):
         self.root.mainloop()
