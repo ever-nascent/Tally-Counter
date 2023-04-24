@@ -87,26 +87,26 @@ class GUI:
         self.root.mainloop()
 
 class Counter:
-    def __init__(self, count, increment_val, decrement_val, symbol):
+    def __init__(self, count, increment_value, decrement_value, symbol):
         self.count = count
-        self.increment_val = increment_val
-        self.decrement_val = decrement_val
+        self.increment_value = increment_value
+        self.decrement_value = decrement_value
         self.symbol = symbol
 
     def increment_count(self):
-        self.count += self.increment_val
+        self.count += self.increment_value
 
     def decrement_count(self):
-        self.count -= self.decrement_val
+        self.count -= self.decrement_value
 
 
 class CounterManager:
     def __init__(self):
         self.counters_dict = {}
 
-    def create_new_counter(self, counter_name="Unnamed Counter", count=0, increment_val=1, decrement_val=1, symbol=None):
+    def create_new_counter(self, counter_name="Unnamed Counter", count=0, increment_value=1, decrement_value=1, symbol=None):
         counter_name = self.validate_unique_counter_name(counter_name)
-        self.counters_dict[counter_name] = Counter(count, increment_val, decrement_val, symbol)
+        self.counters_dict[counter_name] = Counter(count, increment_value, decrement_value, symbol)
 
     def delete_counter(self, counter_name):
         del self.counters_dict[counter_name]
