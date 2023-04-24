@@ -14,6 +14,9 @@ class GUI:
 
     def create_widgets(self):
         self.create_counter_dropdown()
+        self.create_counter_display()
+        self.create_increment_button()
+        self.create_decrement_button()
 
     def create_counter_dropdown(self):
         counter_names = self.counter_manager.get_counter_names()
@@ -28,34 +31,82 @@ class GUI:
         self.counter_dropdown.pack()
         self.counter_dropdown.bind("<<ComboboxSelected>>", self.counter_selected)
 
-    def counter_selected(self, event):
+    def create_counter_display(self):
+        initial_count = self.current_counter().count
+
+        self.counter_display = tk.Label(
+            self.root,
+            text= initial_count,
+            font=("Arial", 40),
+            bg=self.root["bg"]
+        )
+
+        self.counter_display.pack()
+
+    def create_increment_button(self):
+        self.increment_button = ttk.Button(
+            self.root,
+            text="+",
+            command= self.increment
+        )
+
+        self.increment_button.pack()
+
+    def create_decrement_button(self):
+        self.decrement_button = ttk.Button(
+            self.root,
+            text="-",
+            command= self.decrement
+        )
+
+        self.decrement_button.pack()
+
+    def increment(self):
+        selected_counter = self.current_counter()
+        selected_counter.increment_count()
+        self.update_counter_display(selected_counter.count)
+
+    def decrement(self):
+        selected_counter = self.current_counter()
+        selected_counter.decrement_count()
+        self.update_counter_display(selected_counter.count)
+
+    def current_counter(self):
         selected_counter_name = self.counter_dropdown.get()
         selected_counter = self.counter_manager.get_counter(selected_counter_name)
+        return selected_counter
+
+    def counter_selected(self, event):
+        selected_counter = self.current_counter()
+        self.update_counter_display(selected_counter.count)
+
+    def update_counter_display(self, count):
+        self.counter_display.config(text=str(count))
 
     def run(self):
         self.root.mainloop()
 
 class Counter:
-    def __init__(self, count, increment, decrement, symbol):
+    def __init__(self, count, increment_val, decrement_val, symbol):
         self.count = count
-        self.increment = increment
-        self.decrement = decrement
+        self.increment_val = increment_val
+        self.decrement_val = decrement_val
         self.symbol = symbol
 
     def increment_count(self):
-        self.count += self.increment
+        self.count += self.increment_val
 
     def decrement_count(self):
-        self.count -= self.decrement
+        self.count -= self.decrement_val
 
 
 class CounterManager:
     def __init__(self):
         self.counters_dict = {}
 
-    def create_new_counter(self, counter_name="Unnamed Counter", count=0, increment=1, decrement=1, symbol=None):
+    def create_new_counter(self, counter_name="Unnamed Counter", count=0, increment_val=1, decrement_val=1, symbol=None):
         counter_name = self.validate_unique_counter_name(counter_name)
-        self.counters_dict[counter_name] = Counter(count, increment, decrement, symbol)
+        self.counters_dict[counter_name] = Counter(count, increment_val, decrement_val, symbol)
 
     def delete_counter(self, counter_name):
         del self.counters_dict[counter_name]
