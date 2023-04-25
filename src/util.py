@@ -1,5 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+import tkinter.messagebox as messagebox
+import tkinter.simpledialog as simpledialogue
+import tkinter.ttk as ttk
 
 class GUI:
     def __init__(self, counter_manager):
@@ -17,6 +19,7 @@ class GUI:
         self.create_counter_display()
         self.create_increment_button()
         self.create_decrement_button()
+        self.create_options_button()
 
     def create_counter_dropdown(self):
         counter_names = self.counter_manager.get_counter_names()
@@ -33,21 +36,46 @@ class GUI:
 
     def create_counter_display(self):
         initial_count = self.current_counter().count
+        
+        self.font = 60
 
         self.counter_display = tk.Label(
             self.root,
             text= initial_count,
-            font=("Arial", 40),
+            font=("Arial", self.font),
             bg=self.root["bg"]
         )
 
         self.counter_display.pack()
 
+    def create_options_button(self):
+        options = {
+            'Reset Counter': self.reset_count,
+            'Set Counter To...': self.set_count,
+            'Delete Counter': self.del_counter
+        }
+
+        options_menu = ttk.Menubutton(
+            self.root
+        )
+
+        menu = tk.Menu(options_menu, tearoff=0)
+
+        for option in options:
+            menu.add_command(
+                label=option,
+                command=options[option]
+            )
+
+
+        options_menu["menu"] = menu 
+        options_menu.pack(expand=True)
+
     def create_increment_button(self):
         self.increment_button = ttk.Button(
             self.root,
             text="+",
-            command= self.increment
+            command= self.increment_count
         )
 
         self.increment_button.pack()
@@ -56,20 +84,58 @@ class GUI:
         self.decrement_button = ttk.Button(
             self.root,
             text="-",
-            command= self.decrement
+            command= self.decrement_count
         )
 
         self.decrement_button.pack()
 
-    def increment(self):
+    def increment_count(self):
         selected_counter = self.current_counter()
-        selected_counter.increment_count()
+        selected_counter.increment()
         self.update_counter_display(selected_counter.count)
 
-    def decrement(self):
+    def decrement_count(self):
         selected_counter = self.current_counter()
-        selected_counter.decrement_count()
+        selected_counter.decrement()
         self.update_counter_display(selected_counter.count)
+
+    def reset_count(self):
+        counter_name = self.counter_dropdown.get()
+        selected_counter = self.counter_manager.get_counter(counter_name)
+        
+        confirmed = messagebox.askokcancel("Confirm", f"Are you sure you want to reset the \"{counter_name}\" counter?")
+
+        if (confirmed):
+            selected_counter.reset()
+            self.update_counter_display(selected_counter.count)
+
+    def set_count(self):
+        selected_counter = self.current_counter()
+
+        new_count = simpledialogue.askinteger("", "Set Counter To New Value")
+
+        if new_count != selected_counter.count:
+            selected_counter.count = new_count
+            self.update_counter_display(new_count)
+
+    def del_counter(self):
+        total_counters = self.counter_manager.get_total_counters()
+
+        if total_counters > 1:
+            counter_name = self.counter_dropdown.get()
+
+            confirmed = messagebox.askokcancel("Confirm", f"Are you sure you want to delete the \"{counter_name}\" counter?")
+    
+            if (confirmed):
+                self.counter_manager.delete_counter(counter_name)
+
+                self.counter_dropdown['values'] = self.counter_manager.get_counter_names()
+                self.counter_dropdown.current(0)
+            
+                selected_counter_count = self.current_counter().count
+                self.update_counter_display(selected_counter_count)
+        else:   
+            messagebox.showwarning("Unable to delete Counter", "You cannot remove the last counter.")
 
     def current_counter(self):
         selected_counter_name = self.counter_dropdown.get()
@@ -93,11 +159,14 @@ class Counter:
         self.decrement_value = decrement_value
         self.symbol = symbol
 
-    def increment_count(self):
+    def increment(self):
         self.count += self.increment_value
 
-    def decrement_count(self):
+    def decrement(self):
         self.count -= self.decrement_value
+
+    def reset(self):
+        self.count = 0
 
 
 class CounterManager:
@@ -113,6 +182,9 @@ class CounterManager:
 
     def get_counter_names(self):
         return list(self.counters_dict.keys())
+    
+    def get_total_counters(self):
+        return len(self.counters_dict)
     
     def get_counter(self, counter_name):
         return self.counters_dict[counter_name]
@@ -136,5 +208,8 @@ def TallyCounterApp():
     if len(counter_manager.counters_dict) == 0:
         counter_manager.create_new_counter()
  
+    counter_manager.create_new_counter()
+    counter_manager.create_new_counter()
+
     gui = GUI(counter_manager)
     gui.run()
