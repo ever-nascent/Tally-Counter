@@ -55,9 +55,7 @@ class GUI:
             'Delete Counter': self.del_counter
         }
 
-        options_menu = ttk.Menubutton(
-            self.root
-        )
+        options_menu = ttk.Menubutton(self.root)
 
         menu = tk.Menu(options_menu, tearoff=0)
 
@@ -114,7 +112,7 @@ class GUI:
 
         new_count = simpledialogue.askinteger("", "Set Counter To New Value")
 
-        if new_count != selected_counter.count:
+        if new_count and new_count != selected_counter.count:
             selected_counter.count = new_count
             self.update_counter_display(new_count)
 
