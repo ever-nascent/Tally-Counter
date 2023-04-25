@@ -50,8 +50,8 @@ class GUI:
 
     def create_options_button(self):
         options = {
-            'Reset Counter': self.reset_count,
             'Set Counter To...': self.set_count,
+            'Reset Counter': self.reset_count,
             'Delete Counter': self.del_counter
         }
 
@@ -207,9 +207,6 @@ def TallyCounterApp():
 
     if len(counter_manager.counters_dict) == 0:
         counter_manager.create_new_counter()
- 
-    counter_manager.create_new_counter()
-    counter_manager.create_new_counter()
 
     gui = GUI(counter_manager)
     gui.run()
