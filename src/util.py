@@ -3,6 +3,7 @@ import tkinter.messagebox as messagebox
 import tkinter.simpledialog as simpledialogue
 import tkinter.ttk as ttk
 
+
 class GUI:
     def __init__(self, counter_manager):
         self.counter_manager = counter_manager
@@ -24,12 +25,18 @@ class GUI:
     def create_counter_dropdown(self):
         counter_names = self.counter_manager.get_counter_names()
 
+        self.style = ttk.Style()
+        self.style.theme_create('counterstyle', parent='alt', settings=[
+
+        ])
+
         self.counter_dropdown = ttk.Combobox(
             self.root,
             state="readonly",
             values=counter_names
         )
 
+        self.style.theme_use('counterstyle')
         self.counter_dropdown.current(0)
         self.counter_dropdown.pack()
         self.counter_dropdown.bind("<<ComboboxSelected>>", self.counter_selected)
@@ -43,19 +50,21 @@ class GUI:
             self.root,
             text= initial_count,
             font=("Arial", self.font),
-            bg=self.root["bg"]
+            bg=self.root["bg"],
+            fg="#7289DA"
         )
 
         self.counter_display.pack()
 
     def create_options_button(self):
         options = {
+            'Add New Counter': self.add_new_counter,
             'Set Counter To...': self.set_count,
             'Reset Counter': self.reset_count,
             'Delete Counter': self.del_counter
         }
 
-        options_menu = ttk.Menubutton(self.root)
+        options_menu = ttk.Menubutton(self.root,)
 
         menu = tk.Menu(options_menu, tearoff=0)
 
@@ -64,7 +73,6 @@ class GUI:
                 label=option,
                 command=options[option]
             )
-
 
         options_menu["menu"] = menu 
         options_menu.pack(expand=True)
@@ -101,7 +109,7 @@ class GUI:
         counter_name = self.counter_dropdown.get()
         selected_counter = self.counter_manager.get_counter(counter_name)
         
-        confirmed = messagebox.askokcancel("Confirm", f"Are you sure you want to reset the \"{counter_name}\" counter?")
+        confirmed = messagebox.askokcancel("Reset Counter", f"Are you sure you want to reset the \"{counter_name}\" counter?")
 
         if (confirmed):
             selected_counter.reset()
@@ -110,7 +118,11 @@ class GUI:
     def set_count(self):
         selected_counter = self.current_counter()
 
-        new_count = simpledialogue.askinteger("", "Set Counter To New Value")
+        new_count = simpledialogue.askinteger(
+            parent=self.root,
+            title="",
+            prompt="Set Counter To New Value",
+        )
 
         if new_count and new_count != selected_counter.count:
             selected_counter.count = new_count
@@ -122,7 +134,7 @@ class GUI:
         if total_counters > 1:
             counter_name = self.counter_dropdown.get()
 
-            confirmed = messagebox.askokcancel("Confirm", f"Are you sure you want to delete the \"{counter_name}\" counter?")
+            confirmed = messagebox.askokcancel("Delete Counter", f"Are you sure you want to delete the \"{counter_name}\" counter?")
     
             if (confirmed):
                 self.counter_manager.delete_counter(counter_name)
@@ -134,6 +146,13 @@ class GUI:
                 self.update_counter_display(selected_counter_count)
         else:   
             messagebox.showwarning("Unable to delete Counter", "You cannot remove the last counter.")
+
+    def add_new_counter(self):
+        self.counter_manager.create_new_counter()
+        self.counter_dropdown['values'] = self.counter_manager.get_counter_names()
+        self.counter_dropdown.current(self.counter_manager.get_total_counters() - 1)
+        self.update_counter_display(0)
+
 
     def current_counter(self):
         selected_counter_name = self.counter_dropdown.get()
