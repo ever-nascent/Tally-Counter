@@ -170,7 +170,7 @@ class GUI:
         self.root.mainloop()
 
 class Counter:
-    def __init__(self, count, increment_value=1, decrement_value=1, symbol=None):
+    def __init__(self, count, increment_value, decrement_value, symbol):
         self.count = count
         self.increment_value = increment_value
         self.decrement_value = decrement_value
@@ -190,7 +190,7 @@ class CounterManager:
     def __init__(self):
         self.counters_dict = {}
 
-    def create_new_counter(self, counter_name="Unnamed Counter", count, increment_value, decrement_value, symbol):
+    def create_new_counter(self, counter_name="Unnamed Counter", count=0, increment_value=1, decrement_value=1, symbol=None):
         counter_name = self.validate_unique_counter_name(counter_name)
         self.counters_dict[counter_name] = Counter(count, increment_value, decrement_value, symbol)
 
