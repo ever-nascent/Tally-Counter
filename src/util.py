@@ -1,70 +1,102 @@
 import tkinter as tk
-import tkinter.messagebox as messagebox
-import tkinter.simpledialog as simpledialogue
 import tkinter.ttk as ttk
+from tkinter import simpledialog
+from tkinter import messagebox
 
-
-class GUI:
-    def __init__(self, counter_manager):
-        self.counter_manager = counter_manager
+class BaseGUI:
+    def __init__(self):
         self.root = tk.Tk()
+        self.configure_window()
+
+    def configure_window(self):
         self.root.title("Tally Counter")
         self.root.geometry("275x384")
         self.root.resizable(False, False)
         self.root.configure(background="#484454")
 
+    def run(self):
+        self.root.mainloop()
+
+class GUI(BaseGUI):
+    def __init__(self, counter_manager):
+        super().__init__()
+        self.counter_manager = counter_manager
         self.create_widgets()
 
     def create_widgets(self):
-        self.create_counter_dropdown()
-        self.create_counter_display()
-        self.create_increment_button()
-        self.create_decrement_button()
-        self.create_options_button()
+        self.counter_dropdown = CounterDropdown(self.counter_manager, self.root)
+        self.counter_display = CounterDisplay(self.counter_dropdown, self.root)
+        self.counter_options = CounterOptions(self.counter_manager, self.counter_dropdown, self.counter_display, self.root)
+        self.counter_buttons = CounterButtons(self.counter_manager, self.counter_dropdown, self.counter_display, self.root)
 
-    def create_counter_dropdown(self):
+class CounterDropdown:
+    def __init__(self, counter_manager, parent):
+        self.counter_manager = counter_manager
+        self.parent = parent
+        self.create_dropdown()
+    
+    def create_dropdown(self):
         counter_names = self.counter_manager.get_counter_names()
-
-        self.style = ttk.Style()
-        self.style.theme_create('counterstyle', parent='alt', settings=[
-
-        ])
-
-        self.counter_dropdown = ttk.Combobox(
-            self.root,
+        
+        self.dropdown = ttk.Combobox(
+            self.parent,
             state="readonly",
             values=counter_names
         )
 
-        self.style.theme_use('counterstyle')
-        self.counter_dropdown.current(0)
-        self.counter_dropdown.pack()
-        self.counter_dropdown.bind("<<ComboboxSelected>>", self.counter_selected)
+        self.dropdown.current(0)
+        self.dropdown.grid()
+    
+    def get_current_counter_name(self):
+        return self.dropdown.get()
+        
+    def get_current_counter(self):
+        selected_counter_name = self.get_current_counter_name()
+        selected_counter = self.counter_manager.get_counter(selected_counter_name)
+        return selected_counter
+    
+class CounterDisplay():
+    def __init__(self, counter_dropdown, parent):
+        self.parent = parent
+        self.counter_dropdown = counter_dropdown
+        self.create_counter_display()
+        
+        self.counter_dropdown.dropdown.bind("<<ComboboxSelected>>", self.update_counter_display)
 
     def create_counter_display(self):
-        initial_count = self.current_counter().count
-        
-        self.font = 60
+        initial_count = self.counter_dropdown.get_current_counter().count
 
-        self.counter_display = tk.Label(
-            self.root,
-            text= initial_count,
-            font=("Arial", self.font),
-            bg=self.root["bg"],
-            fg="#7289DA"
+        self.counter_label = ttk.Label(
+            self.parent,
+            text=initial_count,
+            font=("Arial", 80),
+            background=self.parent["bg"],
+            foreground="#7289DA"
         )
 
-        self.counter_display.pack()
+        self.counter_label.grid()
+    
+    def update_counter_display(self, event=None):
+        new_count = self.counter_dropdown.get_current_counter().count
+        self.counter_label.config(text=new_count)
+
+class CounterOptions():
+    def __init__(self, counter_manager, counter_dropdown, counter_display, parent):
+        self.parent = parent
+        self.counter_manager = counter_manager
+        self.counter_dropdown = counter_dropdown
+        self.counter_display = counter_display
+
+        self.create_options_button()
 
     def create_options_button(self):
         options = {
-            'Add New Counter': self.add_new_counter,
             'Set Counter To...': self.set_count,
             'Reset Counter': self.reset_count,
             'Delete Counter': self.del_counter
         }
 
-        options_menu = ttk.Menubutton(self.root,)
+        options_menu = ttk.Menubutton(self.parent)
 
         menu = tk.Menu(options_menu, tearoff=0)
 
@@ -75,99 +107,110 @@ class GUI:
             )
 
         options_menu["menu"] = menu 
-        options_menu.pack(expand=True)
+        options_menu.grid()
 
-    def create_increment_button(self):
-        self.increment_button = ttk.Button(
-            self.root,
-            text="+",
-            command= self.increment_count
-        )
-
-        self.increment_button.pack()
-
-    def create_decrement_button(self):
-        self.decrement_button = ttk.Button(
-            self.root,
-            text="-",
-            command= self.decrement_count
-        )
-
-        self.decrement_button.pack()
-
-    def increment_count(self):
-        selected_counter = self.current_counter()
-        selected_counter.increment()
-        self.update_counter_display(selected_counter.count)
-
-    def decrement_count(self):
-        selected_counter = self.current_counter()
-        selected_counter.decrement()
-        self.update_counter_display(selected_counter.count)
-
-    def reset_count(self):
-        counter_name = self.counter_dropdown.get()
-        selected_counter = self.counter_manager.get_counter(counter_name)
+    def set_count(self):
+        current_counter = self.counter_dropdown.get_current_counter()
         
-        confirmed = messagebox.askokcancel("Reset Counter", f"Are you sure you want to reset the \"{counter_name}\" counter?")
+        new_count = simpledialog.askinteger(
+            parent=self.parent,
+            title="",
+            prompt="Set Counter To New Value"
+        )
+
+        if new_count and new_count != current_counter.count:
+            current_counter.count = new_count
+            self.counter_display.update_counter_display(new_count)
+    
+    def reset_count(self):
+        selected_counter = self.counter_dropdown.get_current_counter()
+
+        confirmed = messagebox.askokcancel("Reset Counter", f"Are you sure you want to reset the current counter?")
 
         if (confirmed):
             selected_counter.reset()
-            self.update_counter_display(selected_counter.count)
 
-    def set_count(self):
-        selected_counter = self.current_counter()
-
-        new_count = simpledialogue.askinteger(
-            parent=self.root,
-            title="",
-            prompt="Set Counter To New Value",
-        )
-
-        if new_count and new_count != selected_counter.count:
-            selected_counter.count = new_count
-            self.update_counter_display(new_count)
+            new_count = selected_counter.count
+            self.counter_display.update_counter_display(new_count)
 
     def del_counter(self):
-        total_counters = self.counter_manager.get_total_counters()
+        counters_left = self.counter_manager.get_counter_dict_length()
 
-        if total_counters > 1:
-            counter_name = self.counter_dropdown.get()
+        if counters_left == 1:
+            return messagebox.showwarning("Unable to delete Counter", "You cannot remove the last counter.")
+        
+        confirmed = messagebox.askokcancel("Delete Counter", f"Are you sure you want to delete the current counter?")
 
-            confirmed = messagebox.askokcancel("Delete Counter", f"Are you sure you want to delete the \"{counter_name}\" counter?")
-    
-            if (confirmed):
-                self.counter_manager.delete_counter(counter_name)
+        if (confirmed):
+            current_counter_name = self.counter_dropdown.get_current_counter_name()
+            self.counter_manager.remove_counter(current_counter_name)
 
-                self.counter_dropdown['values'] = self.counter_manager.get_counter_names()
-                self.counter_dropdown.current(0)
+            self.counter_dropdown.dropdown['values'] = self.counter_manager.get_counter_names()
             
-                selected_counter_count = self.current_counter().count
-                self.update_counter_display(selected_counter_count)
-        else:   
-            messagebox.showwarning("Unable to delete Counter", "You cannot remove the last counter.")
+            last_item_in_dropdown = self.counter_manager.get_counter_dict_length() - 1
+            self.counter_dropdown.dropdown.current(last_item_in_dropdown)
 
-    def add_new_counter(self):
-        self.counter_manager.create_new_counter()
-        self.counter_dropdown['values'] = self.counter_manager.get_counter_names()
-        self.counter_dropdown.current(self.counter_manager.get_total_counters() - 1)
-        self.update_counter_display(0)
+            new_count = self.counter_dropdown.get_current_counter().count
+            self.counter_display.update_counter_display(new_count)
 
+class CounterButtons():
+    def __init__(self, counter_manager, counter_dropdown, counter_display, parent):
+        self.parent = parent
+        self.counter_manager = counter_manager
+        self.counter_dropdown = counter_dropdown
+        self.counter_display = counter_display
+        self.create_increment_button()
+        self.create_decrement_button()
 
-    def current_counter(self):
-        selected_counter_name = self.counter_dropdown.get()
-        selected_counter = self.counter_manager.get_counter(selected_counter_name)
-        return selected_counter
+    def create_increment_button(self):
+        self.increment_image = tk.PhotoImage(file='assets/increment_button.png')
+        self.increment_hover_image = tk.PhotoImage(file='assets/increment_button_hover.png')
 
-    def counter_selected(self, event):
-        selected_counter = self.current_counter()
-        self.update_counter_display(selected_counter.count)
+        self.increment_button = tk.Button(
+            self.parent,
+            image=self.increment_image,
+            background=self.parent["bg"],
+            activebackground=self.parent["bg"],
+            borderwidth=0,
+            command=self.increment_count
+        )
 
-    def update_counter_display(self, count):
-        self.counter_display.config(text=count)
+        self.increment_button.bind("<Enter>", lambda event: self.increment_button.config(image=self.increment_hover_image))
+        self.increment_button.bind("<Leave>", lambda event: self.increment_button.config(image=self.increment_image))
 
-    def run(self):
-        self.root.mainloop()
+        self.increment_button.grid()
+
+    def increment_count(self):
+        selected_counter = self.counter_dropdown.get_current_counter()
+        selected_counter.increment()
+
+        new_count = selected_counter.count
+        self.counter_display.update_counter_display(new_count)
+
+    def create_decrement_button(self):
+        self.decrement_image = tk.PhotoImage(file='assets/decrement_button.png')
+        self.decrement_hover_image = tk.PhotoImage(file='assets/decrement_button_hover.png')
+
+        self.decrement_button = tk.Button(
+            self.parent,
+            image=self.decrement_image,
+            background=self.parent["bg"],
+            activebackground=self.parent["bg"],
+            borderwidth=0,
+            command=self.decrement_count
+        )
+
+        self.decrement_button.bind("<Enter>", lambda event: self.decrement_button.config(image=self.decrement_hover_image))
+        self.decrement_button.bind("<Leave>", lambda event: self.decrement_button.config(image=self.decrement_image))
+
+        self.decrement_button.grid()
+
+    def decrement_count(self):
+        selected_counter = self.counter_dropdown.get_current_counter()
+        selected_counter.decrement()
+
+        new_count = selected_counter.count
+        self.counter_display.update_counter_display(new_count)
 
 class Counter:
     def __init__(self, count, increment_value, decrement_value, symbol):
@@ -185,8 +228,19 @@ class Counter:
     def reset(self):
         self.count = 0
 
-
 class CounterManager:
+    def validate_unique_counter_name(self, name):
+        if name not in self.counters_dict:
+            return name
+        else:
+            i = 2
+        while True:
+            new_name = f"{name} {i}"
+        
+            if new_name not in self.counters_dict:
+                return new_name
+            i += 1
+
     def __init__(self):
         self.counters_dict = {}
 
@@ -194,36 +248,29 @@ class CounterManager:
         counter_name = self.validate_unique_counter_name(counter_name)
         self.counters_dict[counter_name] = Counter(count, increment_value, decrement_value, symbol)
 
-    def delete_counter(self, counter_name):
+    def remove_counter(self, counter_name):
         del self.counters_dict[counter_name]
 
     def get_counter_names(self):
-        return list(self.counters_dict.keys())
+        all_counter_names = self.counters_dict.keys()
+        return list(all_counter_names)
     
-    def get_total_counters(self):
+    def get_counter_dict_length(self):
         return len(self.counters_dict)
     
     def get_counter(self, counter_name):
         return self.counters_dict[counter_name]
-    
-    def validate_unique_counter_name(self, name):
-        if name not in self.counters_dict:
-            return name
-        else:
-            i = 2
 
-        while True:
-            new_name = f"{name} {i}"
-            
-            if new_name not in self.counters_dict:
-                return new_name
-            i += 1
+def create_initial_counter(manager):
+    counter_dict_length = manager.get_counter_dict_length()
+
+    if counter_dict_length == 0:
+        manager.create_new_counter(count=2)
+        manager.create_new_counter(count=3)
 
 def TallyCounterApp():
-    counter_manager = CounterManager()
+    manager = CounterManager()
+    create_initial_counter(manager)
 
-    if len(counter_manager.counters_dict) == 0:
-        counter_manager.create_new_counter()
-
-    gui = GUI(counter_manager)
+    gui = GUI(manager)
     gui.run()
