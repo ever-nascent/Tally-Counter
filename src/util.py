@@ -23,6 +23,7 @@ class GUI(BaseGUI):
     def __init__(self, counter_manager):
         super().__init__()
         self.counter_manager = counter_manager
+
         self.create_widgets()
         self.root.after(0, self.start_auto_saving())
 
@@ -34,7 +35,6 @@ class GUI(BaseGUI):
 
     def start_auto_saving(self):
         self.counter_manager.auto_save_counter_data()
-
         time_interval = 60000
         self.root.after(time_interval, self.counter_manager.auto_save_counter_data)
 
