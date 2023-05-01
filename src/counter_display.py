@@ -1,5 +1,9 @@
 from tkinter import ttk
 
+FONT_FAMILY = "Arial"
+DEFAULT_FONT_SIZE = 80
+FOREGROUND = "#7289DA"
+
 class CounterDisplay():
     def __init__(self, counter_dropdown, parent):
         self.parent = parent
@@ -9,17 +13,15 @@ class CounterDisplay():
         self.counter_dropdown.dropdown.bind("<<ComboboxSelected>>", self.update_counter_display)
 
     def create_counter_display(self):
-        self.font_family = "Arial"
-        self.font_size = 80
-
-        initial_count = self.counter_dropdown.get_current_counter().count
+        starting_count = self.counter_dropdown.get_current_counter().count
+        self.font_size = DEFAULT_FONT_SIZE
 
         self.counter_label = ttk.Label(
             self.parent,
-            text=initial_count,
-            font=(self.font_family, self.font_size),
+            text=starting_count,
+            font=(FONT_FAMILY, self.font_size),
             background=self.parent["bg"],
-            foreground="#7289DA"
+            foreground=FOREGROUND
         )
 
         self.counter_label.grid()
