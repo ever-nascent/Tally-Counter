@@ -18,6 +18,6 @@ def create_initial_counter(manager):
     if counter_dict_length == 0:
         manager.create_new_counter()
     
-def auto_save_counter_data(updated_counter_dict):
+def save_counter_data(updated_counter_dict):
     with open("counter_data.pickle", "wb") as file:
         pickle.dump(updated_counter_dict, file)
