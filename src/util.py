@@ -2,6 +2,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import simpledialog
 from tkinter import messagebox
+import os.path
+import pickle
 
 class BaseGUI:
     def __init__(self):
@@ -22,12 +24,19 @@ class GUI(BaseGUI):
         super().__init__()
         self.counter_manager = counter_manager
         self.create_widgets()
+        self.root.after(0, self.start_auto_saving())
 
     def create_widgets(self):
         self.counter_dropdown = CounterDropdown(self.counter_manager, self.root)
         self.counter_display = CounterDisplay(self.counter_dropdown, self.root)
         self.counter_options = CounterOptions(self.counter_manager, self.counter_dropdown, self.counter_display, self.root)
         self.counter_buttons = CounterButtons(self.counter_manager, self.counter_dropdown, self.counter_display, self.root)
+
+    def start_auto_saving(self):
+        self.counter_manager.auto_save_counter_data()
+
+        time_interval = 60000
+        self.root.after(time_interval, self.counter_manager.auto_save_counter_data)
 
 class CounterDropdown:
     def __init__(self, counter_manager, parent):
@@ -64,12 +73,15 @@ class CounterDisplay():
         self.counter_dropdown.dropdown.bind("<<ComboboxSelected>>", self.update_counter_display)
 
     def create_counter_display(self):
+        self.font_family = "Arial"
+        self.font_size = 80
+
         initial_count = self.counter_dropdown.get_current_counter().count
 
         self.counter_label = ttk.Label(
             self.parent,
             text=initial_count,
-            font=("Arial", 80),
+            font=(self.font_family, self.font_size),
             background=self.parent["bg"],
             foreground="#7289DA"
         )
@@ -229,47 +241,65 @@ class Counter:
         self.count = 0
 
 class CounterManager:
+    def __init__(self, counter_dict):
+        self.counter_dict = counter_dict
+
+    def create_new_counter(self, counter_name="Unnamed Counter", count=0, increment_value=1, decrement_value=1, symbol=None):
+        counter_name = self.validate_unique_counter_name(counter_name)
+        self.counter_dict[counter_name] = Counter(count, increment_value, decrement_value, symbol)
+
+    def remove_counter(self, counter_name):
+        del self.counter_dict[counter_name]
+
+    def get_counter_names(self):
+        all_counter_names = self.counter_dict.keys()
+        return list(all_counter_names)
+    
+    def get_counter_dict_length(self):
+        return len(self.counter_dict)
+    
+    def get_counter(self, counter_name):
+        return self.counter_dict[counter_name]
+     
+    def auto_save_counter_data(self):
+        with open("counter_data.pickle", "wb") as file:
+            pickle.dump(self.counter_dict, file)
+
     def validate_unique_counter_name(self, name):
-        if name not in self.counters_dict:
+        if name not in self.counter_dict:
             return name
         else:
             i = 2
         while True:
             new_name = f"{name} {i}"
         
-            if new_name not in self.counters_dict:
+            if new_name not in self.counter_dict:
                 return new_name
             i += 1
 
-    def __init__(self):
-        self.counters_dict = {}
-
-    def create_new_counter(self, counter_name="Unnamed Counter", count=0, increment_value=1, decrement_value=1, symbol=None):
-        counter_name = self.validate_unique_counter_name(counter_name)
-        self.counters_dict[counter_name] = Counter(count, increment_value, decrement_value, symbol)
-
-    def remove_counter(self, counter_name):
-        del self.counters_dict[counter_name]
-
-    def get_counter_names(self):
-        all_counter_names = self.counters_dict.keys()
-        return list(all_counter_names)
-    
-    def get_counter_dict_length(self):
-        return len(self.counters_dict)
-    
-    def get_counter(self, counter_name):
-        return self.counters_dict[counter_name]
+def data_file_exists():
+    if os.path.isfile("counter_data.pickle"):
+        with open("counter_data.pickle", "rb") as file:
+            return pickle.load(file)
+    else:
+        counter_dict = {}
+        with open("counter_data.pickle", "wb") as file:
+            pickle.dump(counter_dict, file)
+        return counter_dict
 
 def create_initial_counter(manager):
     counter_dict_length = manager.get_counter_dict_length()
 
     if counter_dict_length == 0:
-        manager.create_new_counter(count=2)
-        manager.create_new_counter(count=3)
+        manager.create_new_counter()
+
+    counter_data = data_file_exists()
+    return counter_data
 
 def TallyCounterApp():
-    manager = CounterManager()
+    counter_data = data_file_exists()
+
+    manager = CounterManager(counter_data)
     create_initial_counter(manager)
 
     gui = GUI(manager)

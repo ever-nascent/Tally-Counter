@@ -1,3 +1,4 @@
 src/__pycache__
 assets
-todo-list.txt
+to-do-list.txt
+counter_data.pickle
