@@ -1,8 +1,11 @@
 from counter import Counter
+from util import save_counter_data
+import atexit
 
 class CounterManager():
     def __init__(self, counter_dict):
         self.counter_dict = counter_dict
+        atexit.register(self.save_on_exit)
 
     def create_new_counter(self, counter_name="Unnamed Counter", starting_count=0, increment_value=1, decrement_value=1, symbol=None):
         counter_name = self.validate_unique_counter_name(counter_name)
@@ -20,6 +23,9 @@ class CounterManager():
     
     def get_counter(self, counter_name):
         return self.counter_dict[counter_name]
+
+    def save_on_exit(self):
+        save_counter_data(self.counter_dict)
 
     def validate_unique_counter_name(self, name):
         if name not in self.counter_dict:
