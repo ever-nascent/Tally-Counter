@@ -6,9 +6,8 @@ DECREMENT_IMAGE = "assets/decrement_button.png"
 DECREMENT_HOVER_IMAGE = "assets/decrement_button_hover.png"
 
 class CounterButtons():
-    def __init__(self, counter_manager, counter_dropdown, counter_display, parent):
+    def __init__(self, counter_dropdown, counter_display, parent):
         self.parent = parent
-        self.counter_manager = counter_manager
         self.counter_dropdown = counter_dropdown
         self.counter_display = counter_display
 

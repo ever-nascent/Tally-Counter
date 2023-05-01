@@ -15,5 +15,5 @@ class GUI(BaseGUI):
         self.counter_dropdown = CounterDropdown(self.counter_manager, self.root)
         self.counter_display = CounterDisplay(self.counter_dropdown, self.root)
         self.counter_options = CounterOptions(self.counter_manager, self.counter_dropdown, self.counter_display, self.root)
-        self.counter_buttons = CounterButtons(self.counter_manager, self.counter_dropdown, self.counter_display, self.root)
+        self.counter_buttons = CounterButtons(self.counter_dropdown, self.counter_display, self.root)
 
