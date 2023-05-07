@@ -1,4 +1,4 @@
-src/__pycache__
 assets
 to-do-list.txt
-counter_data.pickle
+data
+__pycache__
