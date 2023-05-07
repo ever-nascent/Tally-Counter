@@ -1,8 +1,8 @@
-from base_gui import BaseGUI
-from counter_dropdown import CounterDropdown
-from counter_display import CounterDisplay
-from counter_options import CounterOptions
-from counter_buttons import CounterButtons
+from gui.base_gui import BaseGUI
+from gui.counter_dropdown import CounterDropdown
+from gui.counter_display import CounterDisplay
+from gui.counter_options import CounterOptions
+from gui.counter_buttons import CounterButtons
 
 class GUI(BaseGUI):
     def __init__(self, counter_manager):

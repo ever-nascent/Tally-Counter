@@ -1,4 +1,4 @@
-from counter import Counter
+from utils.counter import Counter
 from util import save_counter_data
 import atexit
 

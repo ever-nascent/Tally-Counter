@@ -1,5 +1,5 @@
 from tkinter import ttk
-from counter_display import CounterDisplay
+from gui.counter_display import CounterDisplay
 
 class CounterDropdown:
     def __init__(self, counter_manager, parent):
