@@ -12,7 +12,7 @@ class CounterOptions():
 
     def create_options_button(self):
         options = {
-            'Add New Counter': self.add_new_counter,
+            'Add New Counter': self.create_counter,
             'Set Counter To...': self.set_count,
             'Reset Counter': self.reset_count,
             'Delete Counter': self.del_counter
@@ -30,13 +30,10 @@ class CounterOptions():
 
         options_menu["menu"] = menu 
         options_menu.grid()
-        
-    def add_new_counter(self):
-        new_counter_root = tk.Toplevel(self.parent)
-        new_counter_root.title("Add New Counter")
 
-        new_counter_root.geometry("400x150")
-		
+    def create_counter(self):
+        self.counter_manager.create_new_counter()
+        self.counter_dropdown.update_dropdown_values()
 
     def set_count(self):
         current_counter = self.counter_dropdown.get_current_counter()
