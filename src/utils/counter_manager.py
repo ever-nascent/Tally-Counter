@@ -34,7 +34,6 @@ class CounterManager():
             i = 2
         while True:
             new_name = f"{name} {i}"
-        
             if new_name not in self.counter_dict:
                 return new_name
             i += 1
