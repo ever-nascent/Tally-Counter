@@ -6,7 +6,7 @@ def main():
     counter_data = get_counter_data()
 
     manager = CounterManager(counter_data)
-    create_initial_counter(manager)
+    if len(counter_data) == 0: create_initial_counter(manager)
 
     gui = GUI(manager)
     gui.run()
